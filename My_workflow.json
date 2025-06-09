@@ -1,0 +1,84 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-workflow",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8d6ea258-7918-4345-a8f2-c7c068661154",
+      "name": "Webhook",
+      "webhookId": "e7132fb0-512b-4273-b87a-044033aaf1b5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const name = $input.first().json.body?.name || \"Guest\";\nreturn {\n  json: {\n    message: `Hello, ${name}! Welcome to n8n`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "886cadc5-6609-4d6a-b498-2e6b311b17c7",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        440,
+        0
+      ],
+      "id": "bcdb294b-b3b5-4df1-9c18-21caa2bfb2aa",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e7d24b3f-f2d5-4f5d-9f16-509032ea87d5",
+  "meta": {
+    "instanceId": "8368d4e0ad4aaa679aa721b7ae40b8f79c95ad83ae9ef044c57bf9d7a5cad3a7"
+  },
+  "id": "6tuCD5s1w9Ry3kDI",
+  "tags": []
+}
