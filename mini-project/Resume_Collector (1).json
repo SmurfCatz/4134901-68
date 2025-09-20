@@ -1,0 +1,324 @@
+{
+  "name": "Resume Collector",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-submit",
+        "options": {}
+      },
+      "name": "Receive Application1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        2940,
+        1060
+      ],
+      "webhookId": "random-webhook-id",
+      "id": "017d6682-88d6-4075-8cc7-0118e4b65141"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "binaryData": true,
+        "binaryPropertyName": "link",
+        "name": "={{ $json.body.name }} {{$json.body.surname}}.pdf",
+        "parents": [
+          "1MhAdwGKawwZS35C7padpP95XvvIy3vqJ"
+        ],
+        "options": {}
+      },
+      "name": "Upload Resume",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        3140,
+        1060
+      ],
+      "id": "aa3ef50c-8f3d-4c6d-a5d5-71b4174d2549",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bnq7kd2BLKQn7eEa",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "share",
+        "fileId": "={{ $node[\"Upload Resume\"].json[\"id\"] }}",
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone",
+            "allowFileDiscovery": true
+          }
+        },
+        "options": {}
+      },
+      "name": "Share Link1",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        1060
+      ],
+      "id": "7a412925-3203-4916-9ae3-51d56239d8bf",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bnq7kd2BLKQn7eEa",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{$node[\"Upload Resume\"].json[\"id\"]}}?fields=webViewLink",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\"fields\": \"webViewLink\"}",
+        "options": {}
+      },
+      "name": "Get Drive Link2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3500,
+        1060
+      ],
+      "id": "4f59dc62-e654-4a6e-8396-618cb42c5af9",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bnq7kd2BLKQn7eEa",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "={{ $('Receive Application1').item.json.body.name }}"
+            },
+            {
+              "name": "surname",
+              "value": "={{ $('Receive Application1').item.json.body.surname }}"
+            },
+            {
+              "name": "position",
+              "value": "={{ $('Receive Application1').item.json.body.position }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Receive Application1').item.json.body.phone }}"
+            },
+            {
+              "name": "link",
+              "value": "={{ $node[\"Get Drive Link2\"].json[\"webViewLink\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Data1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        3680,
+        1060
+      ],
+      "id": "3765c61b-f8b6-4fdd-8baa-95c250129d5c"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "append",
+        "sheetId": "1-NdcCsg4Hjwh3H-SmjRHXFxeJGfFS95UbTHgjMKS6tg",
+        "range": "A:E",
+        "options": {}
+      },
+      "name": "Append to Sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        3860,
+        1060
+      ],
+      "id": "eae8ec77-2b21-4ce0-bf9e-551dc2eb3fc9",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "08uDpfySrVsnCQYb",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={ \"to\": \"Ua3bc1dad4d4eaba9f48c5f8bc4a30c94\", \"messages\": [{ \"type\": \"text\", \"text\": \"📢 มีผู้สมัครใหม่!\\nชื่อ: {{$json.name}} {{$json.surname}}\\nตำแหน่ง: {{$json.position}}\\nเบอร์โทร: {{$json.phone}}\\nResume: {{$json.link}}\" }] }"
+      },
+      "name": "Notify HR1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        4040,
+        1060
+      ],
+      "id": "982bcf29-620d-4b4e-8ac6-f4714cb39779",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DfOnm3TPGoe3IVZS",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<!DOCTYPE html>\n<html lang=\"th\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>สมัครงาน ResumeCollector</title>\n  <script src=\"https://static.line-scdn.net/liff/edge/2/sdk.js\"></script>\n  <link href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css\" rel=\"stylesheet\">\n  <link href=\"https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;\n      background: linear-gradient(135deg, #e6f0fa 0%, #f5f6fa 100%);\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n      margin: 0;\n      padding: 10px;\n      box-sizing: border-box;\n    }\n    .form-container {\n      background: #fff;\n      padding: 25px;\n      border-radius: 16px;\n      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);\n      width: 100%;\n      max-width: 420px;\n      position: relative;\n      overflow: hidden;\n    }\n    .form-container h2 {\n      text-align: center;\n      margin-bottom: 20px;\n      color: #003087;\n      font-size: 24px;\n      font-weight: 600;\n    }\n    .form-container .logo {\n      text-align: center;\n      margin-bottom: 15px;\n    }\n    .form-container .logo img {\n      width: 80px;\n      height: auto;\n      border-radius: 8px;\n    }\n    .form-container label {\n      display: block;\n      margin-bottom: 8px;\n      font-weight: 500;\n      color: #333;\n      font-size: 14px;\n    }\n    .form-container input, .form-container select {\n      width: 100%;\n      padding: 12px 15px;\n      margin-bottom: 10px;\n      border-radius: 8px;\n      border: 1px solid #d1d5db;\n      font-size: 14px;\n      box-sizing: border-box;\n      transition: border-color 0.3s, box-shadow 0.3s;\n    }\n    .form-container input:focus, .form-container select:focus {\n      outline: none;\n      border-color: #003087;\n      box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);\n    }\n    .form-container .input-group {\n      position: relative;\n    }\n    .form-container .input-group i {\n      position: absolute;\n      left: 12px;\n      top: 50%;\n      transform: translateY(-50%);\n      color: #6b7280;\n    }\n    .form-container input[type=\"text\"],\n    .form-container input[type=\"tel\"] {\n      padding-left: 40px;\n    }\n    .form-container .error {\n      color: #dc2626;\n      font-size: 12px;\n      margin-top: -8px;\n      margin-bottom: 8px;\n      display: none;\n    }\n    .form-container button {\n      width: 100%;\n      padding: 12px;\n      border: none;\n      border-radius: 8px;\n      background-color: #003087;\n      color: #fff;\n      font-size: 16px;\n      font-weight: 500;\n      cursor: pointer;\n      transition: background-color 0.3s, transform 0.2s;\n      position: relative;\n    }\n    .form-container button:hover {\n      background-color: #002a6d;\n      transform: translateY(-1px);\n    }\n    .form-container button:disabled {\n      background-color: #6b7280;\n      cursor: not-allowed;\n    }\n    .form-container button .spinner {\n      display: none;\n      border: 2px solid #fff;\n      border-top: 2px solid transparent;\n      border-radius: 50%;\n      width: 16px;\n      height: 16px;\n      animation: spin 1s linear infinite;\n      position: absolute;\n      left: 10px;\n      top: 50%;\n      transform: translateY(-50%);\n    }\n    .form-container button.loading .spinner {\n      display: inline-block;\n    }\n    .form-container button.loading span {\n      visibility: hidden;\n    }\n    .success-message {\n      display: none;\n      text-align: center;\n      color: #15803d;\n      font-size: 14px;\n      margin-top: 10px;\n      font-weight: 500;\n    }\n    .profile {\n      text-align: center;\n      margin-bottom: 20px;\n    }\n    .profile img {\n      border-radius: 50%;\n      width: 60px;\n      height: 60px;\n      margin-bottom: 8px;\n      border: 2px solid #e6f0fa;\n    }\n    .profile .user-id {\n      font-size: 12px;\n      color: #6b7280;\n    }\n    @keyframes spin {\n      0% { transform: rotate(0deg); }\n      100% { transform: rotate(360deg); }\n    }\n    @media (max-width: 400px) {\n      .form-container {\n        padding: 15px;\n      }\n      .form-container h2 {\n        font-size: 20px;\n      }\n      .form-container button {\n        font-size: 14px;\n      }\n    }\n  </style>\n</head>\n<body>\n  <div class=\"form-container\">\n    <h2>สมัครงาน ResumeCollector</h2>\n    <div class=\"profile\" id=\"profileContainer\" style=\"display:none;\">\n      <img id=\"profilePic\" src=\"\" alt=\"Profile Picture\">\n      <div id=\"profileName\"></div>\n      <div id=\"profileUserId\" class=\"user-id\"></div>\n    </div>\n    <form id=\"resumeForm\">\n      <div class=\"input-group\">\n        <label for=\"name\">ชื่อ</label>\n        <i class=\"fas fa-user\"></i>\n        <input type=\"text\" id=\"name\" name=\"name\" required>\n        <div class=\"error\" id=\"nameError\">ชื่อต้องมีอย่างน้อย 2 ตัวอักษรและไม่มีอักขระพิเศษ</div>\n      </div>\n      <div class=\"input-group\">\n        <label for=\"surname\">นามสกุล</label>\n        <i class=\"fas fa-user\"></i>\n        <input type=\"text\" id=\"surname\" name=\"surname\" required>\n        <div class=\"error\" id=\"surnameError\">นามสกุลต้องมีอย่างน้อย 2 ตัวอักษรและไม่มีอักขระพิเศษ</div>\n      </div>\n\n      <!-- ฟิลด์กรอกเบอร์โทรศัพท์ -->\n      <div class=\"input-group\">\n        <label for=\"phone\">เบอร์โทรศัพท์</label>\n        <i class=\"fas fa-phone\"></i>\n        <input type=\"tel\" id=\"phone\" name=\"phone\" required>\n        <div class=\"error\" id=\"phoneError\">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก)</div>\n      </div>\n\n      <div class=\"input-group\">\n        <label for=\"position\">ตำแหน่งที่สมัคร</label>\n        <select id=\"position\" name=\"position\" required>\n          <option value=\"\">-- เลือกตำแหน่ง --</option>\n          <option value=\"Software Engineer\">Software Engineer</option>\n          <option value=\"UI/UX Designer\">UI/UX Designer</option>\n          <option value=\"Data Analyst\">Data Analyst</option>\n        </select>\n        <div class=\"error\" id=\"positionError\">กรุณาเลือกตำแหน่ง</div>\n      </div>\n      <div class=\"input-group\">\n        <label for=\"resume\">อัปโหลด Resume (PDF เท่านั้น, สูงสุด 5MB)</label>\n        <input type=\"file\" id=\"resume\" name=\"link\" accept=\"application/pdf\" required>\n        <div class=\"error\" id=\"resumeError\">กรุณาอัปโหลดไฟล์ PDF ขนาดไม่เกิน 5MB</div>\n      </div>\n      <button type=\"submit\" id=\"submitButton\"><span>ส่งใบสมัคร</span><span class=\"spinner\"></span></button>\n      <div class=\"success-message\" id=\"successMessage\">ส่งใบสมัครเรียบร้อย!</div>\n    </form>\n  </div>\n  <script>\n    const LIFF_ID = \"2008105624-nb69lLPw\"; \n    const form = document.getElementById(\"resumeForm\");\n    const submitButton = document.getElementById(\"submitButton\");\n    const successMessage = document.getElementById(\"successMessage\");\n    const profileContainer = document.getElementById(\"profileContainer\");\n    const profilePic = document.getElementById(\"profilePic\");\n    const profileName = document.getElementById(\"profileName\");\n    const profileUserId = document.getElementById(\"profileUserId\");\n\n    const nameInput = document.getElementById(\"name\");\n    const surnameInput = document.getElementById(\"surname\");\n    const phoneInput = document.getElementById(\"phone\");\n    const positionInput = document.getElementById(\"position\");\n    const fileInput = document.getElementById(\"resume\");\n\n    const nameError = document.getElementById(\"nameError\");\n    const surnameError = document.getElementById(\"surnameError\");\n    const phoneError = document.getElementById(\"phoneError\");\n    const positionError = document.getElementById(\"positionError\");\n    const resumeError = document.getElementById(\"resumeError\");\n\n    async function main() {\n      try {\n        await liff.init({ liffId: LIFF_ID });\n        if (!liff.isLoggedIn()) {\n          liff.login();\n        } else {\n          const profile = await liff.getProfile();\n          profileContainer.style.display = \"block\";\n          profilePic.src = profile.pictureUrl || \"https://via.placeholder.com/60?text=User\";\n          profileName.textContent = profile.displayName || \"ผู้ใช้ LINE\";\n          profileUserId.textContent = `UserID: ${profile.userId}`;\n        }\n      } catch (err) {\n        console.error(\"LIFF init error:\", err);\n        alert(\"เกิดข้อผิดพลาดในการโหลด LIFF: \" + err.message);\n      }\n    }\n\n    // Validate ชื่อและนามสกุล\n    function validateInput(input, errorElement, fieldName) {\n      const value = input.value.trim();\n      const regex = /^[a-zA-Zก-๙ ]{2,}$/;\n      if (!regex.test(value)) {\n        errorElement.textContent = `${fieldName}ต้องมีอย่างน้อย 2 ตัวอักษรและไม่มีอักขระพิเศษ`;\n        errorElement.style.display = \"block\";\n        return false;\n      }\n      errorElement.style.display = \"none\";\n      return true;\n    }\n\n    // Validate เบอร์โทร\n    function validatePhone(input, errorElement) {\n      const value = input.value.trim();\n      const regex = /^0[0-9]{9}$/; // เบอร์โทรไทย 10 หลัก\n      if (!regex.test(value)) {\n        errorElement.style.display = \"block\";\n        return false;\n      }\n      errorElement.style.display = \"none\";\n      return true;\n    }\n\n    // Validate ไฟล์ PDF\n    function validateFile(file) {\n      if (!file) {\n        resumeError.textContent = \"กรุณาอัปโหลดไฟล์ PDF\";\n        resumeError.style.display = \"block\";\n        return false;\n      }\n      if (file.type !== \"application/pdf\") {\n        resumeError.textContent = \"ไฟล์ต้องเป็น PDF เท่านั้น\";\n        resumeError.style.display = \"block\";\n        return false;\n      }\n      if (file.size > 5 * 1024 * 1024) {\n        resumeError.textContent = \"ไฟล์ต้องมีขนาดไม่เกิน 5MB\";\n        resumeError.style.display = \"block\";\n        return false;\n      }\n      resumeError.style.display = \"none\";\n      return true;\n    }\n\n    function validateForm() {\n      const isNameValid = validateInput(nameInput, nameError, \"ชื่อ\");\n      const isSurnameValid = validateInput(surnameInput, surnameError, \"นามสกุล\");\n      const isPhoneValid = validatePhone(phoneInput, phoneError);\n      const isPositionValid = positionInput.value !== \"\";\n      const isFileValid = validateFile(fileInput.files[0]);\n\n      if (!isPositionValid) {\n        positionError.style.display = \"block\";\n      } else {\n        positionError.style.display = \"none\";\n      }\n\n      return isNameValid && isSurnameValid && isPhoneValid && isPositionValid && isFileValid;\n    }\n\n    // เมื่อ submit ฟอร์ม\n    form.addEventListener(\"submit\", async (e) => {\n      e.preventDefault();\n      if (!validateForm()) {\n        return;\n      }\n\n      submitButton.disabled = true;\n      submitButton.classList.add(\"loading\");\n\n      const formData = new FormData();\n      formData.append(\"name\", nameInput.value);\n      formData.append(\"surname\", surnameInput.value);\n      formData.append(\"phone\", phoneInput.value);\n      formData.append(\"position\", positionInput.value);\n      formData.append(\"link\", fileInput.files[0]);\n      formData.append(\"lineUserId\", profileUserId.textContent.replace(\"UserID: \", \"\"));\n\n      try {\n        const response = await fetch(\"https://5221c7eb5c62.ngrok-free.app/webhook-test/resume-submit\", {\n          method: \"POST\",\n          body: formData\n        });\n\n        if (response.ok) {\n          successMessage.style.display = \"block\";\n          form.reset();\n          setTimeout(() => liff.closeWindow(), 1500);\n        } else {\n          const text = await response.text();\n          console.error(\"Server response:\", text);\n          alert(\"เกิดข้อผิดพลาดในการส่งใบสมัคร: \" + text);\n        }\n      } catch (err) {\n        console.error(\"Fetch error:\", err);\n        alert(\"เกิดข้อผิดพลาดในการเชื่อมต่อ: \" + err.message);\n      } finally {\n        submitButton.disabled = false;\n        submitButton.classList.remove(\"loading\");\n      }\n    });\n\n    // Event listener\n    nameInput.addEventListener(\"input\", () => validateInput(nameInput, nameError, \"ชื่อ\"));\n    surnameInput.addEventListener(\"input\", () => validateInput(surnameInput, surnameError, \"นามสกุล\"));\n    phoneInput.addEventListener(\"input\", () => validatePhone(phoneInput, phoneError));\n    positionInput.addEventListener(\"change\", () => {\n      if (positionInput.value !== \"\") {\n        positionError.style.display = \"none\";\n      }\n    });\n    fileInput.addEventListener(\"change\", () => validateFile(fileInput.files[0]));\n\n    main();\n  </script>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        2900,
+        740
+      ],
+      "id": "1248f754-41fa-4ff3-a0a4-10e28dd599f8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "line",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        940
+      ],
+      "id": "52a97331-b3ac-4dcc-ae8b-f1c3757b3514",
+      "name": "Get ID line HR",
+      "webhookId": "7452d18d-a283-4c3a-a279-4d945f825e6a"
+    },
+    {
+      "parameters": {
+        "path": "form",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        740
+      ],
+      "id": "b75b79b2-2f25-4d20-9287-b36437189ce4",
+      "name": "Get Form",
+      "webhookId": "1de9cf16-daa6-47bb-b064-e761b2f32a79"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Application1": {
+      "main": [
+        [
+          {
+            "node": "Upload Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Resume": {
+      "main": [
+        [
+          {
+            "node": "Share Link1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share Link1": {
+      "main": [
+        [
+          {
+            "node": "Get Drive Link2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Drive Link2": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data1": {
+      "main": [
+        [
+          {
+            "node": "Append to Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Sheet1": {
+      "main": [
+        [
+          {
+            "node": "Notify HR1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Form": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c0300602-9fc5-4259-b9be-ac7bb59c3dde",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8368d4e0ad4aaa679aa721b7ae40b8f79c95ad83ae9ef044c57bf9d7a5cad3a7"
+  },
+  "id": "6MRTMjePi4odFOj4",
+  "tags": []
+}
